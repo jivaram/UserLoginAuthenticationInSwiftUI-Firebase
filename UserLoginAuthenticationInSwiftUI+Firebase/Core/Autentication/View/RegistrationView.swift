@@ -13,6 +13,7 @@ struct RegistrationView: View {
     @State private var password: String = ""
     @State private var confirmPassword: String = ""
     @Environment(\.dismiss) var dismissView
+    @EnvironmentObject var viewModel: AuthenticationViewModel
     var body: some View {
         VStack {
             Image("NatureImage")
@@ -30,14 +31,32 @@ struct RegistrationView: View {
                     .autocapitalization(.none)
 
                 InputView(text: $password, title: "Password", placeholder: "Enter your password", isSecureField: true)
-                InputView(text: $confirmPassword, title: "Confirm password", placeholder: "confirm password", isSecureField: true)
+                ZStack(alignment: .trailing){
+                    InputView(text: $confirmPassword, title: "Confirm password", placeholder: "confirm password", isSecureField: true)
+                    if !password.isEmpty && !confirmPassword.isEmpty {
+                        if password == confirmPassword {
+                            Image(systemName: "checkmark.circle.fill")
+                                .imageScale(.large)
+                                .fontWeight(.bold)
+                                .foregroundColor(Color(.systemGreen))
+                                
+                        } else {
+                            Image(systemName: "xmark.circle.fill")
+                                .imageScale(.large)
+                                .fontWeight(.bold)
+                                .foregroundColor(Color(.systemRed))
+                        }
+                    }
+                }
 
             }
             .padding(.horizontal)
             .padding(.top, 12)
             
             Button(action: {
-                print("User sign up...")
+                Task{
+                    try await viewModel.createUserAccount(withEmail: email, password: password, fullName: fullName)
+                }
             }, label: {
                 HStack{
                     Text("Sign up")
@@ -48,6 +67,8 @@ struct RegistrationView: View {
                 .frame(width: UIScreen.main.bounds.width - 32, height: 48)
             })
             .background(Color(.systemBlue))
+            .disabled(!formIsValid)
+            .opacity(formIsValid ? 1.0 : 0.5)
             .cornerRadius(10)
             .padding(.top, 24)
             
@@ -65,6 +86,17 @@ struct RegistrationView: View {
             }
 
         }
+    }
+}
+
+extension RegistrationView: AuthenticationFormProtocol {
+    var formIsValid: Bool {
+        return !email.isEmpty
+        && email.contains("@")
+        && !password.isEmpty
+        && password.count > 5
+        && confirmPassword == password
+        && !fullName.isEmpty
     }
 }
 
