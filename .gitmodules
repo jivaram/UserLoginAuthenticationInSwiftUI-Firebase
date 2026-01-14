@@ -1,0 +1,3 @@
+[submodule "uiuxrevamp"]
+	path = uiuxrevamp
+	url = https://github.com/jivaram/UIUXRevamp.git
